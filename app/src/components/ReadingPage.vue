@@ -1,6 +1,17 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { marked } from 'marked'
 import readingsData from '@data/readings.json'
+
+marked.setOptions({
+  breaks: true,
+  gfm: true
+})
+
+function renderMarkdown(text) {
+  if (!text) return ''
+  return marked.parse(text)
+}
 
 const readings = ref(readingsData.readings)
 const selectedReading = ref(null)
@@ -83,11 +94,11 @@ function closeAnnotation() {
         <div class="comparison">
           <div class="comparison-col bad-col">
             <div class="col-label">悪い例</div>
-            <div class="col-text">{{ para.bad }}</div>
+            <div class="col-text markdown-body" v-html="renderMarkdown(para.bad)"></div>
           </div>
           <div class="comparison-col good-col">
             <div class="col-label">良い例</div>
-            <div class="col-text">{{ para.good }}</div>
+            <div class="col-text markdown-body" v-html="renderMarkdown(para.good)"></div>
           </div>
         </div>
         <div class="annotations" v-if="para.annotations && para.annotations.length">
@@ -250,7 +261,72 @@ function closeAnnotation() {
 .col-text {
   font-size: 0.9rem;
   line-height: 1.6;
-  white-space: pre-wrap;
+}
+
+.col-text.markdown-body :deep(h2) {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 12px 0 6px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.col-text.markdown-body :deep(h2:first-child) {
+  margin-top: 0;
+}
+
+.col-text.markdown-body :deep(h3) {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 10px 0 4px 0;
+}
+
+.col-text.markdown-body :deep(p) {
+  margin: 4px 0;
+}
+
+.col-text.markdown-body :deep(ul),
+.col-text.markdown-body :deep(ol) {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.col-text.markdown-body :deep(li) {
+  margin: 2px 0;
+}
+
+.col-text.markdown-body :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 0.85rem;
+}
+
+.col-text.markdown-body :deep(th),
+.col-text.markdown-body :deep(td) {
+  padding: 4px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  text-align: left;
+}
+
+.col-text.markdown-body :deep(th) {
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.col-text.markdown-body :deep(code) {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.col-text.markdown-body :deep(strong) {
+  font-weight: 700;
+}
+
+.col-text.markdown-body :deep(input[type="checkbox"]) {
+  margin-right: 4px;
 }
 
 .annotations-label {
