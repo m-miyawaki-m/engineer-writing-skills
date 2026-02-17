@@ -605,6 +605,82 @@
           ]
         }
       ]
+    },
+    {
+      "id": "logging-design-example",
+      "title": "実装時ログと本番ログの書き分け",
+      "source": "ログ設計ガイドライン",
+      "category": "explanation",
+      "level": "中級",
+      "createdAt": "2026-02-18",
+      "paragraphs": [
+        {
+          "bad": "## ユーザー登録API\n\n```javascript\napp.post('/api/users', async (req, res) => {\n  console.log('リクエスト来た');\n  console.log('body:', req.body);\n  console.log('password:', req.body.password);\n  \n  const user = await UserService.create(req.body);\n  console.log('ユーザー作成した:', user);\n  console.log('ここ通った');\n  \n  res.json(user);\n});\n```\n\n→ デバッグ用の `console.log` がそのまま本番に残っている。パスワードが平文でログに記録される。",
+          "good": "## ユーザー登録API\n\n```javascript\napp.post('/api/users', async (req, res) => {\n  const requestId = req.headers['x-request-id'] || uuid();\n  \n  logger.info('User registration started', {\n    requestId,\n    email: req.body.email,\n    // password は絶対にログに出さない\n  });\n  \n  try {\n    const user = await UserService.create(req.body);\n    logger.info('User registration completed', {\n      requestId,\n      userId: user.id,\n      duration: Date.now() - startTime\n    });\n    res.json({ id: user.id, email: user.email });\n  } catch (err) {\n    logger.error('User registration failed', {\n      requestId,\n      errorCode: err.code,\n      message: err.message\n    });\n    res.status(500).json({ error: 'Registration failed' });\n  }\n});\n```\n\n→ 構造化ログ、requestIdで追跡可能、機密情報なし、エラーハンドリング付き",
+          "annotations": [
+            {
+              "text": "console.log('リクエスト来た')",
+              "type": "improvement",
+              "color": "orange",
+              "note": "デバッグ用の雑なメッセージ。本番では何の意味も持たない。リリース前に必ず削除すべき"
+            },
+            {
+              "text": "console.log('password:', req.body.password)",
+              "type": "improvement",
+              "color": "orange",
+              "note": "最も危険なパターン。パスワードを平文でログに出力している。ログ流出時に全ユーザーの認証情報が漏洩する"
+            },
+            {
+              "text": "requestId",
+              "type": "skill",
+              "color": "blue",
+              "note": "リクエストIDを付与することで、1つのリクエストに関連する全ログを追跡できる。障害調査の効率が格段に上がる"
+            },
+            {
+              "text": "logger.info / logger.error",
+              "type": "skill",
+              "color": "blue",
+              "note": "ログレベルを適切に分けることで、障害時にERRORだけフィルタして素早く原因特定できる"
+            },
+            {
+              "text": "duration: Date.now() - startTime",
+              "type": "note",
+              "color": "green",
+              "note": "処理時間を記録しておくと、パフォーマンス劣化の検知に役立つ。SLI/SLO監視の基礎データになる"
+            }
+          ]
+        },
+        {
+          "bad": "## ログ設定\n\n```javascript\n// 全部ログに出す\nconst LOG_LEVEL = 'debug';\n\n// ログはコンソールに出力\nconsole.log(`[${new Date()}] ${message}`);\n```\n\n→ 本番でもDEBUGレベル全開。ログ量が膨大になりディスクを圧迫。タイムスタンプの形式もバラバラ。",
+          "good": "## ログ設定\n\n```javascript\nconst logger = createLogger({\n  level: process.env.LOG_LEVEL || 'info',\n  format: combine(\n    timestamp({ format: 'YYYY-MM-DDTHH:mm:ss.SSSZ' }),\n    json()\n  ),\n  transports: [\n    new transports.Console(),\n    new transports.File({\n      filename: 'error.log',\n      level: 'error',\n      maxsize: 10485760,  // 10MB\n      maxFiles: 5\n    })\n  ]\n});\n```\n\n→ 環境変数でレベル制御、ISO 8601タイムスタンプ、JSON構造化、ログローテーション設定済み",
+          "annotations": [
+            {
+              "text": "LOG_LEVEL = 'debug'",
+              "type": "improvement",
+              "color": "orange",
+              "note": "本番でDEBUGレベルは厳禁。大量のログでディスクを圧迫し、重要なログが埋もれる。環境変数で制御すべき"
+            },
+            {
+              "text": "process.env.LOG_LEVEL || 'info'",
+              "type": "skill",
+              "color": "blue",
+              "note": "環境変数でログレベルを制御。本番はINFO、障害調査時だけ一時的にDEBUGに切り替えられる"
+            },
+            {
+              "text": "timestamp + json()",
+              "type": "skill",
+              "color": "blue",
+              "note": "ISO 8601形式のタイムスタンプとJSON構造化で、ログ集約基盤（Datadog、CloudWatch）で検索・集計が容易になる"
+            },
+            {
+              "text": "maxsize + maxFiles",
+              "type": "note",
+              "color": "green",
+              "note": "ログローテーション設定。これがないとログファイルが無限に肥大化してディスク枯渇を引き起こす"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

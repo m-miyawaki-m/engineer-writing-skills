@@ -707,6 +707,94 @@
       "createdAt": "2026-02-18"
     },
     {
+      "id": "debug-logging-1",
+      "term": "実装時のログ（デバッグログ）",
+      "type": "term",
+      "category": "explanation",
+      "meaning": "開発・デバッグ目的で一時的に埋め込むログ。処理の流れや変数の中身を確認するために使い、本番リリース前に削除またはログレベルで制御する。`console.log` の残骸は技術負債になる",
+      "example": "【実装時ログの正しい使い方】\n```javascript\n// デバッグ時: 処理の流れと変数を確認\nconsole.log('=== authenticate start ===', { email });\nconsole.log('user found:', user);\nconsole.log('bcrypt result:', isMatch);\nconsole.log('token generated:', token);\n```\n\n【リリース前に必ずやること】\n1. `console.log` を全て削除 or `logger.debug()` に置換\n2. 機密情報（パスワード、トークン）がログに出ていないか確認\n3. Lintルール `no-console` で自動検出",
+      "antiPattern": "`console.log('ここに来た')` `console.log('test')` `console.log(data)` が本番コードに残っている。パスワードや個人情報がログに出力されている",
+      "usage": "開発時のデバッグ、コードレビューでのログ残骸チェック",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "production-logging-1",
+      "term": "本番ログ設計（運用ログ）",
+      "type": "term",
+      "category": "explanation",
+      "meaning": "本番環境で障害検知・原因調査・監査に使うログ。ログレベル・構造化・出力先・保持期間を設計する。「何が起きたか」を後から追跡できることが目的",
+      "example": "【本番ログの設計要素】\n1. **ログレベル**: ERROR > WARN > INFO > DEBUG\n   - ERROR: 即対応が必要（DB接続失敗、未処理例外）\n   - WARN: 注意が必要（リトライ発生、閾値超過）\n   - INFO: 正常な業務イベント（ログイン成功、注文完了）\n   - DEBUG: 詳細調査用（本番ではOFF）\n\n2. **構造化ログ（JSON形式）**:\n```json\n{\"timestamp\":\"2026-02-18T14:03:00Z\",\"level\":\"ERROR\",\"service\":\"auth-api\",\"requestId\":\"abc-123\",\"userId\":\"user-456\",\"message\":\"Authentication failed\",\"reason\":\"account_locked\",\"attempts\":5}\n```\n\n3. **出さないもの**: パスワード、トークン、個人情報、クレジットカード番号",
+      "antiPattern": "本番で `console.log` だけ。ログレベルなし、構造化なし、タイムスタンプなし。障害時に「何が起きたかわからない」",
+      "usage": "本番環境のログ設計、監視アラート設定、障害調査、セキュリティ監査",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "log-level-design-1",
+      "term": "ログレベル設計",
+      "type": "term",
+      "category": "logical-writing",
+      "meaning": "ERROR/WARN/INFO/DEBUGの各レベルに何を出力するかの基準を定義すること。レベルが適切でないと、本番でノイズが多すぎたり、障害時に情報が足りなかったりする",
+      "example": "【ログレベル基準】\n| レベル | 基準 | 本番 | 例 |\n|---|---|---|---|\n| ERROR | 即対応が必要な異常 | ON | DB接続失敗、未処理例外、外部API障害 |\n| WARN | 異常だが自動復旧可能 | ON | リトライ成功、レート制限接近、非推奨API呼び出し |\n| INFO | 正常な業務イベント | ON | ユーザーログイン、注文完了、バッチ処理開始/終了 |\n| DEBUG | 開発・詳細調査用 | OFF | 変数の中身、SQL文、リクエスト/レスポンス全文 |\n\n【よくある間違い】\n- ERRORにすべき: 「DBタイムアウト」をWARNにしている → 気づかない\n- INFOにすべき: 「全リクエスト」をINFOにしている → ノイズすぎる\n- DEBUGにすべき: 「SQLクエリ全文」を本番INFOで出す → パフォーマンス劣化",
+      "antiPattern": "全てのログを同じレベル（INFO）で出す。本番でDEBUGが有効のまま。ERRORとWARNの区別がない",
+      "usage": "ログ設計方針策定、コードレビュー、監視アラートの閾値設定",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "structured-logging-1",
+      "term": "構造化ログ",
+      "type": "term",
+      "category": "logical-writing",
+      "meaning": "ログをJSON等の機械可読な形式で出力し、ログ収集ツール（Datadog, CloudWatch, ELK等）で検索・集計・アラートを可能にすること。人間が読むだけでなく、ツールが解析できる形にする",
+      "example": "【非構造化ログ（人間用）】\n`[2026-02-18 14:03:00] ERROR: ユーザー user-456 の認証に失敗しました（ロック中）`\n→ grep で検索するしかない。集計困難\n\n【構造化ログ（機械可読）】\n```json\n{\n  \"timestamp\": \"2026-02-18T14:03:00Z\",\n  \"level\": \"ERROR\",\n  \"service\": \"auth-api\",\n  \"requestId\": \"req-abc-123\",\n  \"userId\": \"user-456\",\n  \"action\": \"authenticate\",\n  \"result\": \"failure\",\n  \"reason\": \"account_locked\",\n  \"metadata\": { \"attempts\": 5, \"lockUntil\": \"14:33:00Z\" }\n}\n```\n→ `reason=account_locked` でフィルタ、時間帯ごとの集計、アラート設定が可能",
+      "antiPattern": "ログが自由記述のテキスト。障害時に `grep` で頑張って検索。集計やダッシュボードが作れない",
+      "usage": "ログ基盤設計、監視ダッシュボード構築、障害調査の効率化",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "log-security-1",
+      "term": "ログのセキュリティ",
+      "type": "term",
+      "category": "questioning",
+      "meaning": "ログに機密情報を出力しないこと。パスワード・トークン・個人情報・クレジットカード番号等がログに残ると、ログ流出時に重大なセキュリティインシデントになる",
+      "example": "【出してはいけないもの】\n- パスワード（平文・ハッシュ含む）\n- アクセストークン / リフレッシュトークン\n- 個人情報（住所、電話番号、メール※場合による）\n- クレジットカード番号\n- APIキー / シークレット\n\n【マスキングの例】\n```javascript\n// NG\nlogger.info('Login attempt', { email, password });\n// OK\nlogger.info('Login attempt', { email, password: '***' });\n// OK（そもそもpasswordをログに渡さない）\nlogger.info('Login attempt', { email });\n```",
+      "antiPattern": "デバッグ中に `console.log(req.body)` でリクエスト全体を出力 → パスワードやトークンがログに残る",
+      "usage": "コードレビュー、セキュリティ監査、ログ設計ガイドライン策定",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "log-comparison-pattern-1",
+      "term": "実装時ログ vs 本番ログ比較パターン",
+      "type": "pattern",
+      "category": "explanation",
+      "meaning": "実装（デバッグ）段階のログと本番運用のログの違いを対比し、リリース前に適切なログ設計に切り替えるためのパターン",
+      "goodExample": "## 実装時ログ vs 本番ログ 比較表\n\n| 観点 | 実装時（デバッグ） | 本番（運用） |\n|---|---|---|\n| **目的** | 動作確認・バグ特定 | 障害検知・監視・監査 |\n| **出力先** | コンソール（stdout） | ファイル/ログ集約基盤（Datadog等） |\n| **ログレベル** | DEBUG/TRACE含む全レベル | INFO以上（DEBUGは原則OFF） |\n| **出力形式** | 自由テキスト（人間向け） | 構造化JSON（機械処理向け） |\n| **寿命** | 一時的（実装完了で削除） | 永続的（保持期間はポリシーに従う） |\n| **機密情報** | 開発環境なら許容（本番データ禁止） | 絶対NG（マスキング必須） |\n| **パフォーマンス** | 気にしない | 高負荷時の影響を考慮 |\n\n## リリース前チェック\n- [ ] `console.log` / `console.debug` が残っていないか\n- [ ] ログレベルが適切か（DEBUGが本番で有効になっていないか）\n- [ ] 機密情報がログに含まれていないか\n- [ ] 構造化ログ形式になっているか",
+      "badExample": "実装時の `console.log('ここ通った')` `console.log(data)` をそのまま本番にリリース。\n→ 不要なログが大量に出力されディスクを圧迫\n→ ユーザーの個人情報がログに平文で記録される\n→ 障害発生時に必要な情報がノイズに埋もれて見つからない",
+      "usage": "コードレビュー、リリース前チェックリスト、ログ設計ガイドライン",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "log-design-checklist-pattern-1",
+      "term": "ログ設計チェックリスト",
+      "type": "pattern",
+      "category": "logical-writing",
+      "meaning": "本番リリース前にログ出力を点検するためのチェックリスト。開発用ログの残存・レベル設定・セキュリティ・構造化を網羅的に確認する",
+      "goodExample": "## ログ設計チェックリスト\n\n### 1. デバッグログの除去\n- [ ] `console.log` / `console.debug` / `print` 文がコードに残っていないか\n- [ ] `// TODO: 後で消す` 付きのログ出力が残っていないか\n- [ ] デバッガ用の一時変数・ダンプが残っていないか\n\n### 2. ログレベルの適切さ\n- [ ] ERROR: システムが正常に動作できない事象のみに使用\n- [ ] WARN: 想定外だが処理は継続できる事象に使用\n- [ ] INFO: 正常な業務イベント（開始/完了/重要な状態変化）に使用\n- [ ] DEBUG: 本番では原則OFF、開発時のみ有効\n\n### 3. セキュリティ\n- [ ] パスワード・トークン・APIキーがログに含まれていないか\n- [ ] 個人情報（PII）がマスキングされているか\n- [ ] リクエストボディの全出力（`req.body`）をしていないか\n\n### 4. 運用観点\n- [ ] 構造化ログ（JSON形式）になっているか\n- [ ] requestId / traceId でリクエスト追跡可能か\n- [ ] タイムスタンプがISO 8601形式か\n- [ ] ログローテーション設定があるか",
+      "badExample": "チェックリストなし。各開発者が自由にログを書き、レビューでもログの品質は確認しない\n→ 本番ログが `console.log('debug:', data)` だらけ\n→ 障害時に有用な情報がない",
+      "usage": "PR レビュー、リリース前確認、ログ設計方針の策定",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "log-level-usage-pattern-1",
+      "term": "ログレベル運用パターン",
+      "type": "pattern",
+      "category": "reporting",
+      "meaning": "各ログレベルの使い分けを具体的なコード例で示し、チーム全体で統一したログ運用を実現するパターン",
+      "goodExample": "## ログレベル運用ガイド\n\n### ERROR（即時対応が必要）\n```javascript\nlogger.error('Payment processing failed', {\n  orderId: order.id,\n  errorCode: err.code,\n  message: err.message\n});\n```\n→ アラート通知 → オンコール対応\n\n### WARN（要注意だが処理継続）\n```javascript\nlogger.warn('API response slow', {\n  endpoint: '/api/users',\n  responseTime: 2500,\n  threshold: 2000\n});\n```\n→ ダッシュボード監視 → 傾向分析\n\n### INFO（正常な業務イベント）\n```javascript\nlogger.info('User login successful', {\n  userId: user.id,\n  method: 'oauth',\n  timestamp: new Date().toISOString()\n});\n```\n→ 監査ログ → 利用統計\n\n### DEBUG（開発時のみ）\n```javascript\nlogger.debug('Cache lookup', {\n  key: cacheKey,\n  hit: !!cachedValue\n});\n```\n→ 本番ではOFF → 必要時のみ一時的にON",
+      "badExample": "全てのログを `logger.info()` で出力。重要度が区別できず、障害時に ERROR ログだけでフィルタリングできない",
+      "usage": "チームのログ規約策定、コードレビュー、障害対応の効率化",
+      "createdAt": "2026-02-18"
+    },
+    {
       "id": "reporting-horenso-1",
       "term": "報連相（ホウレンソウ）の型",
       "type": "term",
