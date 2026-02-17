@@ -1,5 +1,16 @@
 <script setup>
 import { computed } from 'vue'
+import { marked } from 'marked'
+
+marked.setOptions({
+  breaks: true,
+  gfm: true
+})
+
+function renderMarkdown(text) {
+  if (!text) return ''
+  return marked.parse(text)
+}
 
 const props = defineProps({
   skillId: { type: String, required: true }
@@ -459,7 +470,7 @@ const currentSkill = computed(() => skillData[props.skillId] || null)
       <p class="skill-description">{{ item.description }}</p>
       <div class="skill-example">
         <div class="example-label">具体例</div>
-        <div class="example-content">{{ item.example }}</div>
+        <div class="example-content markdown-body" v-html="renderMarkdown(item.example)"></div>
       </div>
       <div class="skill-tip">
         <span class="tip-label">ポイント:</span> {{ item.tip }}
@@ -521,8 +532,86 @@ const currentSkill = computed(() => skillData[props.skillId] || null)
   background: #f5f5f5;
   padding: 10px 12px;
   border-radius: 6px;
-  white-space: pre-wrap;
   line-height: 1.5;
+}
+
+.example-content.markdown-body :deep(h2) {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 12px 0 6px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.example-content.markdown-body :deep(h2:first-child) {
+  margin-top: 0;
+}
+
+.example-content.markdown-body :deep(h3) {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 10px 0 4px 0;
+}
+
+.example-content.markdown-body :deep(p) {
+  margin: 4px 0;
+}
+
+.example-content.markdown-body :deep(ul),
+.example-content.markdown-body :deep(ol) {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.example-content.markdown-body :deep(li) {
+  margin: 2px 0;
+}
+
+.example-content.markdown-body :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+  font-size: 0.85rem;
+}
+
+.example-content.markdown-body :deep(th),
+.example-content.markdown-body :deep(td) {
+  padding: 4px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  text-align: left;
+}
+
+.example-content.markdown-body :deep(th) {
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.example-content.markdown-body :deep(code) {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.example-content.markdown-body :deep(pre) {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 8px 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 6px 0;
+}
+
+.example-content.markdown-body :deep(pre code) {
+  background: none;
+  padding: 0;
+}
+
+.example-content.markdown-body :deep(strong) {
+  font-weight: 700;
+}
+
+.example-content.markdown-body :deep(input[type="checkbox"]) {
+  margin-right: 4px;
 }
 
 .skill-tip {
