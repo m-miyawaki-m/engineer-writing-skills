@@ -1,0 +1,56 @@
+{
+  "readings": [
+    {
+      "id": "incident-report-example",
+      "title": "障害報告の改善例",
+      "source": "社内障害報告テンプレート",
+      "category": "reporting",
+      "level": "中級",
+      "createdAt": "2026-02-18",
+      "paragraphs": [
+        {
+          "bad": "今日の14時頃にサーバーが落ちました。たぶんメモリが足りなくなったと思います。再起動したら直りました。",
+          "good": "【発生日時】2/18 14:03〜14:21（約18分間）\n【影響範囲】本番APIサーバー2台中1台（web-02）が応答不能\n【原因】バッチ処理のメモリリークにより OOM Killer が発動\n【対応】14:15 に検知、14:21 にプロセス再起動で復旧\n【再発防止】バッチ処理のメモリ上限設定を追加（PR #234）",
+          "annotations": [
+            {
+              "text": "14時頃",
+              "type": "improvement",
+              "color": "orange",
+              "note": "「頃」は曖昧。正確な時刻（14:03）を記載すべき"
+            },
+            {
+              "text": "サーバーが落ちました",
+              "type": "improvement",
+              "color": "orange",
+              "note": "どのサーバーか、影響範囲が不明。「web-02が応答不能」と具体化"
+            },
+            {
+              "text": "たぶん",
+              "type": "improvement",
+              "color": "orange",
+              "note": "推測と事実を区別する。ログやメトリクスに基づく原因を記載"
+            },
+            {
+              "text": "直りました",
+              "type": "improvement",
+              "color": "orange",
+              "note": "何をして直ったのか（対応）と再発防止策が欠落"
+            },
+            {
+              "text": "【発生日時】",
+              "type": "skill",
+              "color": "blue",
+              "note": "5W1H の When を正確に記載。時刻と影響時間を明示"
+            },
+            {
+              "text": "【再発防止】",
+              "type": "skill",
+              "color": "green",
+              "note": "報告の締めに再発防止策を入れることで、報告の価値が大幅に向上"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

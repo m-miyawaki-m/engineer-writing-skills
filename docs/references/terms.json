@@ -1,0 +1,116 @@
+{
+  "terms": [
+    {
+      "id": "conclusion-first-1",
+      "term": "結論ファースト",
+      "type": "term",
+      "category": "logical-writing",
+      "meaning": "最初に結論を述べ、その後に理由や詳細を展開する文章構成法",
+      "example": "【結論】本機能はリリース可能です。【理由】全テストが通過し、レビューも完了しています。",
+      "antiPattern": "テストを実行しました。全件通過しました。レビューも終わりました。なので、リリース可能です。",
+      "usage": "報告・提案・レビューコメントなど、相手に素早く要点を伝えたい場面",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "granularity-adjustment-1",
+      "term": "粒度調整",
+      "type": "term",
+      "category": "concretization-abstraction",
+      "meaning": "情報の詳細度を相手や目的に合わせて適切に調整すること",
+      "example": "【マネージャー向け】認証基盤の移行が完了し、全サービスで新方式が稼働中です。【開発者向け】OAuth 2.0 + PKCE への移行が完了。既存の Session Cookie 認証は 3/1 に廃止予定。",
+      "antiPattern": "認証の移行が終わりました。（相手に関わらず同一粒度）",
+      "usage": "報告先に応じて技術詳細の深さを変える場面",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "escalation-1",
+      "term": "エスカレーション",
+      "type": "term",
+      "category": "reporting",
+      "meaning": "自分の権限や能力では対応できない問題を上位者に報告・判断を仰ぐこと",
+      "example": "【状況】本番DBのレプリケーション遅延が30分を超えています。【影響】読み取り系APIのデータ不整合リスクあり。【判断依頼】サービス一時停止の判断をお願いします。",
+      "antiPattern": "DBがなんかおかしいです。どうしましょう？",
+      "usage": "障害対応、リソース不足、方針判断が必要な場面",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "ambiguity-elimination-1",
+      "term": "曖昧さ排除",
+      "type": "term",
+      "category": "questioning",
+      "meaning": "「適切に」「なるべく早く」等の曖昧表現を具体的な条件・数値に置き換えること",
+      "example": "「なるべく早く」→「今週金曜 17:00 まで」、「適切に処理」→「バリデーションエラー時は 400 を返し、エラー内容を errors 配列に格納」",
+      "antiPattern": "適切にエラーハンドリングしてください。なるべく早くお願いします。",
+      "usage": "要件定義、タスク依頼、レビューコメント",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "specification-explanation-1",
+      "term": "仕様説明の型",
+      "type": "term",
+      "category": "explanation",
+      "meaning": "仕様を【目的→入力→処理→出力→制約】の順で体系的に説明する方法",
+      "example": "【目的】ユーザーのセッション管理。【入力】ログインリクエスト（email, password）。【処理】認証後 JWT を発行。【出力】access_token（有効期限15分）+ refresh_token。【制約】同時セッション数は最大5。",
+      "antiPattern": "ログインしたら JWT を返します。",
+      "usage": "設計レビュー、API仕様説明、新機能の概要説明",
+      "createdAt": "2026-02-18"
+    }
+  ],
+  "patterns": [
+    {
+      "id": "mece-decomposition-1",
+      "term": "MECE分解",
+      "type": "pattern",
+      "category": "concretization-abstraction",
+      "meaning": "漏れなくダブりなく要素を分解する思考法",
+      "goodExample": "障害原因を【ネットワーク層】【アプリケーション層】【データベース層】【インフラ層】に分類して調査",
+      "badExample": "障害原因を【サーバー】【ネットワーク】【システム】に分類（サーバーとシステムの境界が曖昧で重複あり）",
+      "usage": "要件分解、障害分析、タスク分割、テスト観点の洗い出し",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "progress-report-template-1",
+      "term": "進捗報告テンプレート",
+      "type": "pattern",
+      "category": "reporting",
+      "meaning": "【完了/進行中/未着手/ブロッカー】の4区分で進捗を構造化する報告パターン",
+      "goodExample": "【完了】API設計・実装（3/3タスク）\n【進行中】フロント実装（2/5タスク、今日中に3/5予定）\n【未着手】E2Eテスト\n【ブロッカー】ステージング環境の権限待ち（インフラチームに依頼済み）",
+      "badExample": "APIは終わりました。フロントをやっています。テストはまだです。あと環境の件があります。",
+      "usage": "デイリースタンドアップ、週次報告、プロジェクト状況共有",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "review-comment-pattern-1",
+      "term": "レビューコメントの型",
+      "type": "pattern",
+      "category": "explanation",
+      "meaning": "【指摘レベル＋理由＋改善案】を明示するコードレビューコメントの書き方",
+      "goodExample": "[must] N+1クエリが発生しています。ユーザー100件でクエリが101回実行されます。`includes(:posts)` を追加して eager loading にしてください。",
+      "badExample": "ここ、パフォーマンス悪そうです。",
+      "usage": "コードレビュー、設計レビュー、ドキュメントレビュー",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "causal-chain-1",
+      "term": "因果関係の連鎖",
+      "type": "pattern",
+      "category": "logical-writing",
+      "meaning": "原因→結果を明示的に繋いで論理の飛躍を防ぐ文章構成パターン",
+      "goodExample": "メモリリークが発生（原因）→ GC頻度が増加（結果1/原因2）→ レスポンスタイムが悪化（結果2/原因3）→ タイムアウトエラーが多発（最終結果）",
+      "badExample": "メモリリークがあったのでタイムアウトが多発しました。（中間の因果が省略されていて論理が飛躍）",
+      "usage": "障害報告の原因分析、技術選定の根拠説明",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "question-template-1",
+      "term": "質問の型",
+      "type": "pattern",
+      "category": "questioning",
+      "meaning": "【前提共有＋自分の理解＋具体的な質問】で構成する質問パターン",
+      "goodExample": "【前提】認証APIの仕様書 v2.1 を読みました。【自分の理解】refresh_token の有効期限は30日で、期限切れ時は再ログインが必要と理解しています。【質問】refresh_token を自動延長する仕組みは意図的に入れていないのでしょうか？セキュリティ要件との兼ね合いを確認したいです。",
+      "badExample": "refresh_token の仕様がよくわかりません。教えてください。",
+      "usage": "仕様確認、技術的な疑問の解消、レビューでの確認",
+      "createdAt": "2026-02-18"
+    }
+  ]
+}
