@@ -54,6 +54,39 @@
       "antiPattern": "ログインしたら JWT を返します。",
       "usage": "設計レビュー、API仕様説明、新機能の概要説明",
       "createdAt": "2026-02-18"
+    },
+    {
+      "id": "task-decomposition-1",
+      "term": "タスク分解",
+      "type": "term",
+      "category": "concretization-abstraction",
+      "meaning": "大きな作業を実行可能な小さい単位に分割し、依存関係と優先度を明確にすること",
+      "example": "【元タスク】ユーザー認証機能の実装\n【分解】\n1. DB: usersテーブル作成（ブロッカーなし）\n2. API: POST /auth/login エンドポイント（1に依存）\n3. API: JWT発行・検証ミドルウェア（2に依存）\n4. Front: ログインフォームUI（ブロッカーなし）\n5. Front: 認証状態管理（3,4に依存）\n6. Test: E2Eテスト（5に依存）",
+      "antiPattern": "「認証機能を作る」というタスク1つだけをチケットに登録し、完了まで数日間進捗が見えない",
+      "usage": "スプリント計画、チケット作成、作業見積もり、プルリクエストの分割",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "todo-checklist-1",
+      "term": "TODOチェックリスト作成",
+      "type": "term",
+      "category": "logical-writing",
+      "meaning": "作業の抜け漏れを防ぐため、完了条件が明確な項目を列挙したチェックリストを作成すること",
+      "example": "## リリース前チェックリスト\n- [ ] 全テスト通過（unit / integration / E2E）\n- [ ] コードレビュー承認済み（2名以上）\n- [ ] ステージング環境で動作確認完了\n- [ ] マイグレーション手順書作成済み\n- [ ] ロールバック手順書作成済み\n- [ ] 関係者への事前連絡済み",
+      "antiPattern": "「リリース準備する」だけを書いて、テスト・レビュー・連絡などの個別項目を明示しない",
+      "usage": "リリース準備、コードレビュー依頼、引き継ぎ、定型作業の標準化",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "done-definition-1",
+      "term": "完了条件の定義（Definition of Done）",
+      "type": "term",
+      "category": "concretization-abstraction",
+      "meaning": "タスクが「完了」と言える状態を事前に明文化すること。曖昧な「できた」を防ぐ",
+      "example": "【完了条件】\n1. 機能が仕様通り動作する（手動確認済み）\n2. ユニットテスト追加済み（カバレッジ80%以上）\n3. APIドキュメント更新済み\n4. レビュー承認済み\n5. ステージングにデプロイ済み",
+      "antiPattern": "「実装したら完了」（テスト・ドキュメント・レビューが抜ける）",
+      "usage": "チケット作成時、スプリント計画、タスク依頼、Pull Request テンプレート",
+      "createdAt": "2026-02-18"
     }
   ],
   "patterns": [
@@ -110,6 +143,39 @@
       "goodExample": "【前提】認証APIの仕様書 v2.1 を読みました。【自分の理解】refresh_token の有効期限は30日で、期限切れ時は再ログインが必要と理解しています。【質問】refresh_token を自動延長する仕組みは意図的に入れていないのでしょうか？セキュリティ要件との兼ね合いを確認したいです。",
       "badExample": "refresh_token の仕様がよくわかりません。教えてください。",
       "usage": "仕様確認、技術的な疑問の解消、レビューでの確認",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "task-decomposition-pattern-1",
+      "term": "タスク分解テンプレート",
+      "type": "pattern",
+      "category": "concretization-abstraction",
+      "meaning": "【目的→前提→分解→依存関係→見積もり】の順でタスクを構造化する分解パターン",
+      "goodExample": "【目的】検索機能の実装\n【前提】Elasticsearch導入済み、APIフレームワークはFastAPI\n【分解】\n  1. インデックス定義・マッピング作成（0.5h）\n  2. 検索APIエンドポイント実装（2h）→ 1に依存\n  3. フィルタ・ソート・ページネーション（1.5h）→ 2に依存\n  4. フロント検索UI（2h）→ ブロッカーなし\n  5. 結合テスト（1h）→ 3,4に依存\n【合計見積もり】7h（バッファ込み8h）",
+      "badExample": "検索機能を作る。たぶん2〜3日くらい。",
+      "usage": "スプリント計画、見積もり依頼への回答、技術調査報告",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "checklist-pattern-1",
+      "term": "チェックリスト設計パターン",
+      "type": "pattern",
+      "category": "logical-writing",
+      "meaning": "【カテゴリ分類＋完了条件明示＋担当/期限】で構成する実用的チェックリスト",
+      "goodExample": "## PR マージ前チェックリスト\n\n### コード品質\n- [ ] Lintエラーなし\n- [ ] 型エラーなし（tsc --noEmit 通過）\n- [ ] 不要なconsole.log削除済み\n\n### テスト\n- [ ] 新規テスト追加済み\n- [ ] 既存テスト全件通過\n- [ ] エッジケース確認済み（null, 空配列, 境界値）\n\n### ドキュメント\n- [ ] API仕様書更新済み（該当する場合）\n- [ ] CHANGELOG追記済み",
+      "badExample": "- [ ] コード書いた\n- [ ] テストした\n- [ ] 確認した",
+      "usage": "PRテンプレート、リリースチェック、新メンバーオンボーディング、障害対応手順",
+      "createdAt": "2026-02-18"
+    },
+    {
+      "id": "wbs-pattern-1",
+      "term": "WBS（作業分解構成図）",
+      "type": "pattern",
+      "category": "concretization-abstraction",
+      "meaning": "成果物ベースで作業をツリー構造に分解し、末端をアクション可能な粒度にするパターン",
+      "goodExample": "認証機能\n├── バックエンド\n│   ├── DB設計（usersテーブル、sessionsテーブル）\n│   ├── 認証API（login, logout, refresh）\n│   └── ミドルウェア（JWT検証、レート制限）\n├── フロントエンド\n│   ├── ログイン画面\n│   ├── 認証状態管理（store）\n│   └── 認証ガード（ルーティング）\n└── テスト・運用\n    ├── 単体テスト\n    ├── E2Eテスト\n    └── 監視アラート設定",
+      "badExample": "認証機能\n├── 設計\n├── 実装\n├── テスト\n（各項目が大きすぎてアクション不可能）",
+      "usage": "プロジェクト計画、大規模機能の設計、工数見積もりの根拠",
       "createdAt": "2026-02-18"
     }
   ]

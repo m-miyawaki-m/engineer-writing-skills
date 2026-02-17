@@ -51,6 +51,86 @@
           ]
         }
       ]
+    },
+    {
+      "id": "task-decomposition-example",
+      "title": "タスク分解の改善例",
+      "source": "スプリント計画チケット",
+      "category": "concretization-abstraction",
+      "level": "中級",
+      "createdAt": "2026-02-18",
+      "paragraphs": [
+        {
+          "bad": "検索機能を作る。2〜3日くらいかかりそう。",
+          "good": "【目的】商品検索機能の実装\n【前提】Elasticsearch 8.x 導入済み、API は FastAPI\n\n【タスク分解】\n1. インデックス定義・マッピング作成（0.5h / ブロッカーなし）\n2. 検索APIエンドポイント実装（2h / 1に依存）\n3. フィルタ・ソート・ページネーション（1.5h / 2に依存）\n4. フロント検索UI（2h / ブロッカーなし ※2と並行可能）\n5. 結合テスト（1h / 3,4に依存）\n\n【合計見積もり】7h（バッファ込み 1日）\n【完了条件】全テスト通過 + レビュー承認 + ステージング動作確認",
+          "annotations": [
+            {
+              "text": "2〜3日くらい",
+              "type": "improvement",
+              "color": "orange",
+              "note": "根拠のない概算。分解して積み上げた見積もりにすべき"
+            },
+            {
+              "text": "検索機能を作る",
+              "type": "improvement",
+              "color": "orange",
+              "note": "タスクが大きすぎて進捗が見えない。1PR単位に分割すべき"
+            },
+            {
+              "text": "ブロッカーなし ※2と並行可能",
+              "type": "skill",
+              "color": "blue",
+              "note": "依存関係を明示することで、並行作業の可能性が見える"
+            },
+            {
+              "text": "【完了条件】",
+              "type": "skill",
+              "color": "green",
+              "note": "何をもって「完了」とするかを事前に定義。認識齟齬を防ぐ"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "checklist-example",
+      "title": "TODOチェックリストの改善例",
+      "source": "PRテンプレート",
+      "category": "logical-writing",
+      "level": "初級",
+      "createdAt": "2026-02-18",
+      "paragraphs": [
+        {
+          "bad": "- [ ] コード書いた\n- [ ] テストした\n- [ ] 確認した",
+          "good": "## PR チェックリスト\n\n### コード品質\n- [ ] Lint / Formatter エラーなし（`npm run lint` 通過）\n- [ ] 型チェック通過（`npx tsc --noEmit`）\n- [ ] 不要な console.log / デバッグコード削除済み\n\n### テスト\n- [ ] 新規テスト追加済み（対象: ○○関数）\n- [ ] 既存テスト全件通過（`npm test` 結果貼付）\n- [ ] エッジケース確認済み（null, 空配列, 上限値）\n\n### レビュー・ドキュメント\n- [ ] セルフレビュー実施済み（diff 全行確認）\n- [ ] 変更に関連する API ドキュメント更新済み\n- [ ] CHANGELOG に追記済み（該当する場合）",
+          "annotations": [
+            {
+              "text": "コード書いた",
+              "type": "improvement",
+              "color": "orange",
+              "note": "完了条件が曖昧。「書いた」だけでは品質が担保されない"
+            },
+            {
+              "text": "テストした",
+              "type": "improvement",
+              "color": "orange",
+              "note": "何のテストをどう実行したか不明。具体的なコマンドと期待結果を書く"
+            },
+            {
+              "text": "npm run lint 通過",
+              "type": "skill",
+              "color": "blue",
+              "note": "検証コマンドを明記することで、誰でも同じ基準で確認できる"
+            },
+            {
+              "text": "### コード品質",
+              "type": "skill",
+              "color": "green",
+              "note": "カテゴリ分けすることで、チェック漏れを防ぎ、どの観点が不足しているか一目でわかる"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
