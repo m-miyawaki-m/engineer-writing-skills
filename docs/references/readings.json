@@ -489,6 +489,122 @@
           ]
         }
       ]
+    },
+    {
+      "id": "junior-communication-example",
+      "title": "新人エンジニアの報連相と質問",
+      "source": "新人研修マニュアル",
+      "category": "questioning",
+      "level": "初級",
+      "createdAt": "2026-02-18",
+      "paragraphs": [
+        {
+          "bad": "（Slackで）\n\nすみません、エラーが出て動きません。助けてください。",
+          "good": "（Slackで）\n\n## 質問: ユーザー登録APIでバリデーションエラー\n\n### やりたいこと\nPOST /api/users でユーザー登録を実装中\n\n### 発生しているエラー\n```\nValidationError: \"email\" must be a valid email\n```\n\n### 試したこと（20分）\n1. リクエストボディを確認 → `{\"email\": \"test@example.com\"}` で正しい\n2. バリデーションスキーマを確認 → Joi の `.email()` を使用\n3. Joi のバージョンを確認 → v17.9.1\n\n### わからないこと\nリクエストは正しいはずなのに、なぜバリデーションが通らないか\n\n### 仮説\nContent-Type が `application/json` になっていない可能性？",
+          "annotations": [
+            {
+              "text": "エラーが出て動きません",
+              "type": "improvement",
+              "color": "orange",
+              "note": "何のエラーか、どの操作で発生するか、エラーメッセージは何か、全て不明"
+            },
+            {
+              "text": "助けてください",
+              "type": "improvement",
+              "color": "orange",
+              "note": "自分で何を試したか不明。相手は何をすればいいかわからない"
+            },
+            {
+              "text": "試したこと（20分）",
+              "type": "skill",
+              "color": "blue",
+              "note": "自分で調査した内容と時間を明示。「すぐ聞いた」のではなく「調べた上で聞いている」"
+            },
+            {
+              "text": "仮説",
+              "type": "skill",
+              "color": "green",
+              "note": "自分なりの仮説を提示。回答者が「その仮説は合っている/違う」と効率的に答えられる"
+            }
+          ]
+        },
+        {
+          "bad": "PRを出しました。レビューお願いします。\n\n（PR本文: 空）\n（タイトル: 修正）",
+          "good": "## [TICKET-123] ユーザー検索APIにページネーション追加\n\n### 概要\n全件返却で1000件超のタイムアウト対策として、ページネーションを追加しました。\n\n### 変更内容\n- `GET /api/users?page=1&per_page=20` パラメータ追加\n- レスポンスに `total_count`, `total_pages` を追加\n- 後方互換あり（パラメータ省略時: page=1, per_page=20）\n\n### テスト結果\n- 新規テスト5件追加: 全件パス\n- 既存テスト: 全件パス（影響なし）\n\n### レビューしてほしいポイント\n- L45-60: オフセットベースのページネーションにしましたが、カーソルベースの方がよいでしょうか？\n- L80: per_page の上限を100にしていますが、適切でしょうか？",
+          "annotations": [
+            {
+              "text": "PR本文: 空",
+              "type": "improvement",
+              "color": "orange",
+              "note": "レビュアーは「何を見ればいいか」がわからず、全差分を読む必要がある。時間の無駄"
+            },
+            {
+              "text": "タイトル: 修正",
+              "type": "improvement",
+              "color": "orange",
+              "note": "何の修正か不明。チケットIDも機能名もない"
+            },
+            {
+              "text": "レビューしてほしいポイント",
+              "type": "skill",
+              "color": "blue",
+              "note": "自分が迷った箇所を明示。レビュアーは重点的に見るべき場所がわかり効率的"
+            },
+            {
+              "text": "後方互換あり",
+              "type": "skill",
+              "color": "green",
+              "note": "既存への影響を事前に説明。レビュアーが「これは大丈夫か」と心配せずに済む"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ai-prompt-example",
+      "title": "AIコーディング支援のプロンプト設計",
+      "source": "チーム開発ガイドライン",
+      "category": "explanation",
+      "level": "初級",
+      "createdAt": "2026-02-18",
+      "paragraphs": [
+        {
+          "bad": "認証のコード書いて。Typescriptで。あとテストも。",
+          "good": "## プロンプト\n\n**役割**: あなたはTypeScriptとExpress.jsに精通したバックエンドエンジニアです。\n\n**文脈**:\n- Express.js v4 + TypeScript のAPIサーバー\n- 認証はJWT方式（access_token 15分 + refresh_token 30日）\n- ユーザー情報は PostgreSQL の users テーブル\n- パスワードは bcrypt でハッシュ化済み\n\n**要件**:\n1. `POST /auth/login` - メール+パスワードでログイン、JWT発行\n2. `POST /auth/refresh` - refresh_tokenで新しいaccess_token発行\n3. `authMiddleware` - access_tokenを検証するミドルウェア\n\n**制約**:\n- エラー時は適切なHTTPステータス（401/403）を返却\n- 環境変数: `JWT_SECRET`, `JWT_REFRESH_SECRET`\n- 既存の `UserRepository.findByEmail()` を使用\n\n**出力形式**:\n- TypeScriptコードブロック\n- 各関数にJSDocコメント\n- Jestのユニットテスト付き",
+          "annotations": [
+            {
+              "text": "認証のコード書いて",
+              "type": "improvement",
+              "color": "orange",
+              "note": "「認証」が広すぎる。JWT? Session? OAuth? 何のフレームワーク? 要件が全く不明"
+            },
+            {
+              "text": "あとテストも",
+              "type": "improvement",
+              "color": "orange",
+              "note": "テストフレームワーク未指定、テスト対象未指定。Jest? Vitest? 何をテストする?"
+            },
+            {
+              "text": "役割",
+              "type": "skill",
+              "color": "blue",
+              "note": "AIに「何の専門家として回答するか」を指定。回答の技術レベルと方向性が安定する"
+            },
+            {
+              "text": "既存の UserRepository.findByEmail() を使用",
+              "type": "skill",
+              "color": "blue",
+              "note": "既存コードとの接続点を明示。AIが勝手に別のDB接続コードを生成するのを防ぐ"
+            },
+            {
+              "text": "出力形式",
+              "type": "skill",
+              "color": "green",
+              "note": "出力の形式を指定することで、そのまま使えるコードが得られる。「JSDoc付き」で品質も担保"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
