@@ -1,61 +1,145 @@
 <script setup>
 import { ref, computed } from 'vue'
 import Sidebar from './components/Sidebar.vue'
-import SearchFilter from './components/SearchFilter.vue'
-import TermList from './components/TermList.vue'
-import ReadingPage from './components/ReadingPage.vue'
-import SkillGuide from './components/SkillGuide.vue'
-import termsData from '@data/terms.json'
+import ArticlePage from './components/ArticlePage.vue'
+import { useArticles } from './composables/useArticles.js'
 
-const currentPage = ref('terms')
-const searchQuery = ref('')
-const selectedCategory = ref('all')
-const selectedType = ref('all')
+const { articles, categories, articlesByCategory, getArticle } = useArticles()
 
-const allItems = computed(() => [
-  ...termsData.terms,
-  ...termsData.patterns
-])
+const selectedSlug = ref(null)
+const sidebarOpen = ref(false)
+const filterTag = ref('')
 
-const currentSkillId = computed(() => {
-  if (currentPage.value.startsWith('skill-')) {
-    return currentPage.value.replace('skill-', '')
+// 初期表示: 最初のカテゴリの最初の記事を選択
+const firstCat = categories.value[0]
+if (firstCat) {
+  const firstArticles = articlesByCategory.value[firstCat.slug]
+  if (firstArticles?.length) {
+    selectedSlug.value = firstArticles[0].slug
   }
-  return null
+}
+
+const selectedArticle = computed(() => {
+  if (!selectedSlug.value) return null
+  return getArticle(selectedSlug.value)
 })
+
+function handleSelect(slug) {
+  selectedSlug.value = slug
+  sidebarOpen.value = false
+}
+
+function handleNavigate(slug) {
+  selectedSlug.value = slug
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function handleTagClick(tag) {
+  filterTag.value = filterTag.value === tag ? '' : tag
+}
+
+function handleClearFilter() {
+  filterTag.value = ''
+}
 </script>
 
 <template>
-  <Sidebar :currentPage="currentPage" @navigate="currentPage = $event" />
-  <main class="main-content">
-    <template v-if="currentPage === 'terms'">
-      <h1 class="page-title">用語・パターン一覧</h1>
-      <SearchFilter
-        v-model:searchQuery="searchQuery"
-        v-model:selectedCategory="selectedCategory"
-        v-model:selectedType="selectedType"
+  <div class="app-layout">
+    <!-- Mobile header -->
+    <header class="mobile-header">
+      <button class="menu-btn" @click="sidebarOpen = !sidebarOpen">☰</button>
+      <span class="mobile-title">Writing Skills</span>
+    </header>
+
+    <!-- Sidebar -->
+    <Sidebar
+      :categories="categories"
+      :articles-by-category="articlesByCategory"
+      :selected-slug="selectedSlug"
+      :filter-tag="filterTag"
+      :class="{ open: sidebarOpen }"
+      @select="handleSelect"
+      @clear-filter="handleClearFilter"
+    />
+
+    <!-- Overlay for mobile -->
+    <div
+      v-if="sidebarOpen"
+      class="sidebar-overlay"
+      @click="sidebarOpen = false"
+    />
+
+    <!-- Main content -->
+    <div class="main-area">
+      <ArticlePage
+        :article="selectedArticle"
+        @navigate="handleNavigate"
+        @tag-click="handleTagClick"
       />
-      <TermList
-        :items="allItems"
-        :searchQuery="searchQuery"
-        :selectedCategory="selectedCategory"
-        :selectedType="selectedType"
-      />
-    </template>
-    <ReadingPage v-else-if="currentPage === 'reading'" />
-    <SkillGuide v-else-if="currentSkillId" :skillId="currentSkillId" />
-  </main>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.main-content {
-  margin-left: 200px;
-  padding: 24px;
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #fff;
 }
 
-.page-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 16px;
+.mobile-header {
+  display: none;
+}
+
+.main-area {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+    padding: 0 16px;
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    z-index: 50;
+  }
+
+  .menu-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+
+  .mobile-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1565c0;
+  }
+
+  .main-area {
+    margin-top: 48px;
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 99;
+  }
 }
 </style>
