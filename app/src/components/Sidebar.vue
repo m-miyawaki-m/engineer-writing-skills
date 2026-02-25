@@ -1,77 +1,252 @@
 <script setup>
-defineProps({
-  currentPage: { type: String, required: true }
+import { ref, computed, watch } from 'vue'
+
+const props = defineProps({
+  categories: { type: Array, default: () => [] },
+  articlesByCategory: { type: Object, default: () => ({}) },
+  selectedSlug: { type: String, default: '' },
+  filterTag: { type: String, default: '' }
 })
 
-const emit = defineEmits(['navigate'])
+const emit = defineEmits(['select', 'clear-filter'])
 
-const pages = [
-  { id: 'terms', label: '用語一覧' },
-  { id: 'reading', label: '実例読解' },
-  { id: 'skill-concretization-abstraction', label: '具体化・抽象化' },
-  { id: 'skill-reporting', label: '報告・連絡' },
-  { id: 'skill-explanation', label: '説明・提案' },
-  { id: 'skill-logical-writing', label: '論理・構成' },
-  { id: 'skill-questioning', label: '質問・確認' }
-]
+const searchQuery = ref('')
+const expandedCategories = ref(new Set())
+
+// 初期状態で全カテゴリを展開
+watch(() => props.categories, (cats) => {
+  if (cats.length > 0 && expandedCategories.value.size === 0) {
+    cats.forEach(c => expandedCategories.value.add(c.slug))
+  }
+}, { immediate: true })
+
+const filteredArticles = computed(() => {
+  const q = searchQuery.value.toLowerCase()
+  const tag = props.filterTag
+
+  const result = {}
+  for (const [catSlug, articles] of Object.entries(props.articlesByCategory)) {
+    let filtered = articles
+    if (tag) {
+      filtered = filtered.filter(a => a.tags.includes(tag))
+    }
+    if (q) {
+      filtered = filtered.filter(a =>
+        a.title.toLowerCase().includes(q) ||
+        a.tags.some(t => t.toLowerCase().includes(q)) ||
+        (a.rawContent && a.rawContent.toLowerCase().includes(q))
+      )
+    }
+    if (filtered.length > 0) result[catSlug] = filtered
+  }
+  return result
+})
+
+function toggleCategory(slug) {
+  if (expandedCategories.value.has(slug)) {
+    expandedCategories.value.delete(slug)
+  } else {
+    expandedCategories.value.add(slug)
+  }
+}
+
+function selectArticle(slug) {
+  emit('select', slug)
+}
 </script>
 
 <template>
-  <nav class="sidebar">
-    <div class="sidebar-title">Menu</div>
-    <ul class="nav-list">
-      <li
-        v-for="page in pages"
-        :key="page.id"
-        class="nav-item"
-        :class="{ active: currentPage === page.id }"
-        @click="emit('navigate', page.id)"
-      >
-        {{ page.label }}
-      </li>
-    </ul>
-  </nav>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>Writing Skills</h2>
+    </div>
+
+    <div class="sidebar-search">
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="記事を検索..."
+        class="search-input"
+      />
+    </div>
+
+    <div v-if="filterTag" class="sidebar-filter">
+      <span class="filter-label">タグ: {{ filterTag }}</span>
+      <button class="filter-clear" @click="emit('clear-filter')">✕</button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <template v-for="cat in categories" :key="cat.slug">
+        <div
+          v-if="filteredArticles[cat.slug]?.length"
+          class="category-group"
+        >
+          <button
+            class="category-header"
+            @click="toggleCategory(cat.slug)"
+          >
+            <span class="category-arrow" :class="{ expanded: expandedCategories.has(cat.slug) }">
+              ▶
+            </span>
+            {{ cat.name }}
+            <span class="category-count">{{ filteredArticles[cat.slug]?.length || 0 }}</span>
+          </button>
+
+          <ul v-if="expandedCategories.has(cat.slug)" class="article-list">
+            <li
+              v-for="article in filteredArticles[cat.slug]"
+              :key="article.slug"
+              class="article-item"
+              :class="{ selected: article.slug === selectedSlug }"
+              @click="selectArticle(article.slug)"
+            >
+              {{ article.title }}
+            </li>
+          </ul>
+        </div>
+      </template>
+    </nav>
+  </aside>
 </template>
 
 <style scoped>
 .sidebar {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 200px;
+  width: 280px;
   height: 100vh;
-  background: #fff;
+  background: #fafafa;
   border-right: 1px solid #e0e0e0;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.sidebar-title {
-  padding: 16px;
-  font-weight: 700;
-  font-size: 1.1rem;
+.sidebar-header {
+  padding: 16px 16px 8px;
   border-bottom: 1px solid #e0e0e0;
 }
 
-.nav-list {
-  list-style: none;
-}
-
-.nav-item {
-  padding: 10px 16px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background 0.15s, color 0.15s;
-  border-right: 3px solid transparent;
-}
-
-.nav-item:hover {
-  background: #f5f5f5;
-}
-
-.nav-item.active {
-  background: #e3f2fd;
+.sidebar-header h2 {
+  font-size: 16px;
+  font-weight: 700;
   color: #1565c0;
+  margin: 0;
+}
+
+.sidebar-search {
+  padding: 8px 16px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+  outline: none;
+}
+
+.search-input:focus {
+  border-color: #1565c0;
+}
+
+.sidebar-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 16px;
+  background: #e3f2fd;
+  font-size: 12px;
+  color: #1565c0;
+}
+
+.filter-clear {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #1565c0;
+  padding: 0 4px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1565c0;
+  text-align: left;
+}
+
+.category-header:hover {
+  background: #f0f0f0;
+}
+
+.category-arrow {
+  font-size: 10px;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+.category-arrow.expanded {
+  transform: rotate(90deg);
+}
+
+.category-count {
+  margin-left: auto;
+  font-size: 11px;
+  color: #999;
+  font-weight: 400;
+}
+
+.article-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.article-item {
+  padding: 6px 16px 6px 32px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+
+.article-item:hover {
+  background: #f0f0f0;
+}
+
+.article-item.selected {
+  background: #e3f2fd;
+  border-left-color: #1565c0;
   font-weight: 600;
-  border-right-color: #1565c0;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -280px;
+    top: 0;
+    z-index: 100;
+    transition: left 0.3s;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+  }
+
+  .sidebar.open {
+    left: 0;
+  }
 }
 </style>
